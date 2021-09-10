@@ -45,8 +45,8 @@ def secret():
 
 @app.route('/users/<username>')
 def user_deatils(username):
-    if 'user_id' not in session:
-        flash('You must be logged in to view this page')
+    if session['user_id'] != username:
+        flash('You do not have permission to view this')
         return redirect('/login')
     user = User.query.get(username)
     return render_template('user_details.html', user=user)
@@ -79,7 +79,7 @@ def login_form():
 
 @app.route('/users/<username>/delete', methods=['POST'])
 def delete_user(username):
-    if 'user_id' not in session:
+    if session['user_id'] != username:
         flash('You must be logged in to do this')
         return redirect('/login')
     user = User.query.get(username)
@@ -91,7 +91,7 @@ def delete_user(username):
 @app.route('/users/<username>/feedback/add', methods=['GET','POST'])
 def add_feedback(username):
     form = FeedBackForm()
-    if 'user_id' not in session:
+    if session['user_id'] != username:
         flash('You must be logged in to do this')
         return redirect('/login')
     if form.validate_on_submit():
@@ -106,8 +106,9 @@ def add_feedback(username):
 @app.route('/feedback/<feedback_id>/update', methods=['GET','POST'])
 def update_feedback(feedback_id):
     form = FeedBackForm()
-    if 'user_id' not in session:
-        flash('You must be logged in to do this')
+    feedback = Feedback.query.get(feedback_id)
+    if session['user_id'] != feedback.username:
+        flash('You do not have permission to view this')
         return redirect('/login')
     if form.validate_on_submit():
         feedback = Feedback.query.get(feedback_id)
@@ -116,7 +117,6 @@ def update_feedback(feedback_id):
         db.session.add(feedback)
         db.session.commit()
         return redirect(f'/users/{feedback.username}')
-    feedback = Feedback.query.get(feedback_id)
     form.title.data = feedback.title
     form.content.data = feedback.content
 
